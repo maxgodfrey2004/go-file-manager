@@ -37,6 +37,24 @@ type Explorer struct {
 	Path string
 }
 
+// MoveMultiple will move the explorer through a list of directories separated by '/' characters.
+// Each directory must be adjacent to the directory that the explorer is currently in.
+func (e *Explorer) MoveMultiple(directories string) error {
+	// Remove trailing forward slashes from directories
+	if directories[len(directories) - 1] == '/' {
+		directories = directories[:len(directories) - 1]
+	}
+
+	dirList := strings.Split(directories, "/")
+	for _, dir := range dirList {
+		err := e.MoveOne(dir)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Move will move the explorer to a given directory relative to the current working directory.
 // The given directory must be adjacent to the directory that the explorer is currently in.
 func (e *Explorer) MoveOne(nextDirectory string) error {
@@ -45,10 +63,13 @@ func (e *Explorer) MoveOne(nextDirectory string) error {
 		nextDirectory = nextDirectory[:len(nextDirectory) - 1]
 	}
 	
-	if nextDirectory == ".." {
+	if nextDirectory == "." {
+		return nil
+	} else if nextDirectory == ".." {
 		lastForwardSlash := strings.LastIndexAny(e.Path, "/")
 		if lastForwardSlash == -1 {
-			return errors.New("already at top-level directory")
+			// We are at the top-level directory
+			return nil
 		}
 		e.Path = e.Path[:lastForwardSlash]
 		return nil
