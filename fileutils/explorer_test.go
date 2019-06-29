@@ -12,7 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package fileutils
 
-func main() {
+import (
+	"testing"
+)
+
+func TestDirectoryExists(t *testing.T) {
+	t.Log(directoryExists("/")) // exists
+	t.Log(directoryExists("/doesnotexist/")) // does not exist
+	t.Log(directoryExists("/bin")) // exists
+	t.Log(directoryExists("/bin/bash")) // not a directory
+}
+
+func TestExplorer(t *testing.T) {
+	e := Explorer{""}
+	t.Log("e.Path:", e.Path)
+	err1 := e.MoveOne("bin")
+	t.Log("e.Path:", e.Path, "error:", err1)
+	err2 := e.MoveOne("..")
+	t.Log("e.Path:", e.Path, "error:", err2)
+
+	err3 := e.MoveOne("bin/")
+	t.Log("e.Path:", e.Path, "error:", err3)
 }
