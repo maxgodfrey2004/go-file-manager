@@ -35,4 +35,9 @@ func TestExplorer(t *testing.T) {
 
 	err3 := e.MoveOne("bin/")
 	t.Log("e.Path:", e.Path, "error:", err3)
+	err4 := e.MoveMultiple("../../")
+	t.Log("e.Path:", e.Path, "error:", err4)
+
+	err5 := e.MoveMultiple("bin/../bin/../")
+	t.Log("e.Path:", e.Path, "error:", err5)
 }
