@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fileutils
+package explorer
 
 import (
 	"errors"
@@ -106,8 +106,8 @@ func (e *explorer) MoveOne(nextDirectory string) error {
 	return nil
 }
 
-// NewExplorer returns an explorer type with all member values initialised to their defaults.
-func NewExplorer() (e explorer) {
+// New returns an explorer type with all member values initialised to their defaults.
+func New() (e explorer) {
 	e.Path = ""
 	e.CurrentUser, _ = user.Current()
 	return
