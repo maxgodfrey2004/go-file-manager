@@ -17,6 +17,7 @@ package fileutils
 import (
 	"errors"
 	"os"
+	"os/user"
 	"strings"
 )
 
@@ -32,14 +33,36 @@ func directoryExists(filePath string) error {
 	return nil
 }
 
-// Explorer represents a file explorer.
-type Explorer struct {
-	Path string
+// explorer represents a file explorer.
+type explorer struct {
+	Path        string
+	CurrentUser *user.User
+}
+
+// MoveAbsolute will move the explorer to a specified absolute path.
+// The path may begin with either a '~' or a '/'.
+func (e *explorer) MoveAbsolute(path string) error {
+	// Remove trailing forward slashes from the path
+	if path[len(path) - 1] == '/' {
+		path = path[:len(path) - 1]
+	}
+
+	if path == "~" {
+		path = e.CurrentUser.HomeDir
+	} else if path[0] == '~' {
+		path = e.CurrentUser.HomeDir + path[1:]
+	}
+
+	if err := directoryExists(path); err != nil {
+		return err
+	}
+	e.Path = path
+	return nil
 }
 
 // MoveMultiple will move the explorer through a list of directories separated by '/' characters.
 // Each directory must be adjacent to the directory that the explorer is currently in.
-func (e *Explorer) MoveMultiple(directories string) error {
+func (e *explorer) MoveMultiple(directories string) error {
 	// Remove trailing forward slashes from directories
 	if directories[len(directories) - 1] == '/' {
 		directories = directories[:len(directories) - 1]
@@ -57,7 +80,7 @@ func (e *Explorer) MoveMultiple(directories string) error {
 
 // Move will move the explorer to a given directory relative to the current working directory.
 // The given directory must be adjacent to the directory that the explorer is currently in.
-func (e *Explorer) MoveOne(nextDirectory string) error {
+func (e *explorer) MoveOne(nextDirectory string) error {
 	// Remove trailing forward slashes from nextDirectory
 	if nextDirectory[len(nextDirectory) - 1] == '/' {
 		nextDirectory = nextDirectory[:len(nextDirectory) - 1]
@@ -81,4 +104,11 @@ func (e *Explorer) MoveOne(nextDirectory string) error {
 	}
 	e.Path = nextPath
 	return nil
+}
+
+// NewExplorer returns an explorer type with all member values initialised to their defaults.
+func NewExplorer() (e explorer) {
+	e.Path = ""
+	e.CurrentUser, _ = user.Current()
+	return
 }

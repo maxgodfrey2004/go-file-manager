@@ -25,8 +25,8 @@ func TestDirectoryExists(t *testing.T) {
 	t.Log(directoryExists("/bin/bash")) // not a directory
 }
 
-func TestExplorer(t *testing.T) {
-	e := Explorer{""}
+func TestMoveOne(t *testing.T) {
+	e := NewExplorer()
 	t.Log("e.Path:", e.Path)
 	err1 := e.MoveOne("bin")
 	t.Log("e.Path:", e.Path, "error:", err1)
@@ -35,9 +35,23 @@ func TestExplorer(t *testing.T) {
 
 	err3 := e.MoveOne("bin/")
 	t.Log("e.Path:", e.Path, "error:", err3)
-	err4 := e.MoveMultiple("../../")
-	t.Log("e.Path:", e.Path, "error:", err4)
+}
 
-	err5 := e.MoveMultiple("bin/../bin/../")
-	t.Log("e.Path:", e.Path, "error:", err5)
+func TestMoveMultiple(t *testing.T) {
+	e := NewExplorer()
+	err1 := e.MoveMultiple("../../")
+	t.Log("e.Path:", e.Path, "error:", err1)
+
+	err2 := e.MoveMultiple("bin/../bin/../")
+	t.Log("e.Path:", e.Path, "error:", err2)
+}
+
+func TestMoveAbsolute(t *testing.T) {
+	e := NewExplorer()
+	err1 := e.MoveAbsolute("/mnt/c/")
+	t.Log("e.Path:", e.Path, "error:", err1)
+	err2 := e.MoveAbsolute("~/bin")
+	t.Log("e.Path:", e.Path, "error:", err2)
+	err3 := e.MoveAbsolute("~")
+	t.Log("e.Path:", e.Path, "error:", err3)
 }
