@@ -21,20 +21,26 @@ import (
 func TestList(t *testing.T) {
 	e := New()
 	e.MoveAbsolute("~")
-	all, _ := e.List()
+	all, _ := e.List(false)
+	t.Log(all)
+	all, _ = e.List(true)
 	t.Log(all)
 }
 
 func TestListDirectories(t *testing.T) {
 	e := New()
 	e.MoveAbsolute("~")
-	directories, _ := e.ListDirectories()
+	directories, _ := e.ListDirectories(false)
+	t.Log(directories)
+	directories, _ = e.ListDirectories(true)
 	t.Log(directories)
 }
 
 func TestListFiles(t *testing.T) {
 	e := New()
 	e.MoveAbsolute("~")
-	files, _ := e.ListFiles()
+	files, _ := e.ListFiles(false)
+	t.Log(files)
+	files, _ = e.ListFiles(true)
 	t.Log(files)
 }

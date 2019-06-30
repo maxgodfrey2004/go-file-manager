@@ -18,8 +18,9 @@ import (
 	"os"
 )
 
-// List returns the contents of the directory which the explorer is currently in.
-func (e *explorer) List() ([]string, error) {
+// List returns the contents of the directory which the explorer is currently in. Given a bool,
+// if true it will include files and directories prefixed with a '.', otherwise it will not.
+func (e *explorer) List(listAll bool) ([]string, error) {
 	var contents []string
 	f, err := os.Open(e.Path)
 	if err != nil {
@@ -31,16 +32,25 @@ func (e *explorer) List() ([]string, error) {
 		return contents, err
 	}
 
-	for _, file := range fileInfo {
-		contents = append(contents, file.Name())
+	if listAll {
+		for _, file := range fileInfo {
+			contents = append(contents, file.Name())
+		}
+	} else {
+		for _, file := range fileInfo {
+			if file.Name()[0] != '.' {
+				contents = append(contents, file.Name())
+			}
+		}
 	}
 	return contents, nil
 }
 
 // ListDirectories returns all directories within the current directory in which the explorer is
 // located. Note that this function will return an array of directories exclusively. Files will
-// be ignored.
-func (e *explorer) ListDirectories() ([]string, error) {
+// be ignored. Given a bool, if true it will include directories with a leading '.', otherwise it
+// will not.
+func (e *explorer) ListDirectories(listAll bool) ([]string, error) {
 	var directories []string
 	f, err := os.Open(e.Path)
 	if err != nil {
@@ -52,9 +62,17 @@ func (e *explorer) ListDirectories() ([]string, error) {
 		return directories, err
 	}
 
-	for _, file := range fileInfo {
-		if file.IsDir() {
-			directories = append(directories, file.Name())
+	if listAll {
+		for _, file := range fileInfo {
+			if file.IsDir() {
+				directories = append(directories, file.Name())
+			}
+		}
+	} else {
+		for _, file := range fileInfo {
+			if file.IsDir() && file.Name()[0] != '.' {
+				directories = append(directories, file.Name())
+			}
 		}
 	}
 	return directories, nil
@@ -62,7 +80,8 @@ func (e *explorer) ListDirectories() ([]string, error) {
 
 // ListFiles returns all files within the current directory in which the explorer is located. Note
 // that this function will return an array of files exclusively. No directory will be included.
-func (e *explorer) ListFiles() ([]string, error) {
+// Given a bool, if true it will include files prefixed with a '.', otherwise it will not.
+func (e *explorer) ListFiles(listAll bool) ([]string, error) {
 	var files []string
 	f, err := os.Open(e.Path)
 	if err != nil {
@@ -74,9 +93,17 @@ func (e *explorer) ListFiles() ([]string, error) {
 		return files, err
 	}
 
-	for _, file := range fileInfo {
-		if !file.IsDir() {
-			files = append(files, file.Name())
+	if listAll {
+		for _, file := range fileInfo {
+			if !file.IsDir() {
+				files = append(files, file.Name())
+			}
+		}
+	} else {
+		for _, file := range fileInfo {
+			if !file.IsDir() && file.Name()[0] != '.' {
+				files = append(files, file.Name())
+			}
 		}
 	}
 	return files, nil
