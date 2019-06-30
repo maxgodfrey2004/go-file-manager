@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fileutils
+package explorer
 
 import (
 	"testing"
@@ -26,7 +26,7 @@ func TestDirectoryExists(t *testing.T) {
 }
 
 func TestMoveOne(t *testing.T) {
-	e := NewExplorer()
+	e := New()
 	t.Log("e.Path:", e.Path)
 	err1 := e.MoveOne("bin")
 	t.Log("e.Path:", e.Path, "error:", err1)
@@ -38,7 +38,7 @@ func TestMoveOne(t *testing.T) {
 }
 
 func TestMoveMultiple(t *testing.T) {
-	e := NewExplorer()
+	e := New()
 	err1 := e.MoveMultiple("../../")
 	t.Log("e.Path:", e.Path, "error:", err1)
 
@@ -47,7 +47,7 @@ func TestMoveMultiple(t *testing.T) {
 }
 
 func TestMoveAbsolute(t *testing.T) {
-	e := NewExplorer()
+	e := New()
 	err1 := e.MoveAbsolute("/mnt/c/")
 	t.Log("e.Path:", e.Path, "error:", err1)
 	err2 := e.MoveAbsolute("~/bin")
