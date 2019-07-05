@@ -43,8 +43,8 @@ type explorer struct {
 // The path may begin with either a '~' or a '/'.
 func (e *explorer) MoveAbsolute(path string) error {
 	// Remove trailing forward slashes from the path
-	if path[len(path) - 1] == '/' {
-		path = path[:len(path) - 1]
+	if path[len(path)-1] == '/' {
+		path = path[:len(path)-1]
 	}
 
 	if path == "~" {
@@ -64,8 +64,8 @@ func (e *explorer) MoveAbsolute(path string) error {
 // Each directory must be adjacent to the directory that the explorer is currently in.
 func (e *explorer) MoveMultiple(directories string) error {
 	// Remove trailing forward slashes from directories
-	if directories[len(directories) - 1] == '/' {
-		directories = directories[:len(directories) - 1]
+	if directories[len(directories)-1] == '/' {
+		directories = directories[:len(directories)-1]
 	}
 
 	dirList := strings.Split(directories, "/")
@@ -82,10 +82,10 @@ func (e *explorer) MoveMultiple(directories string) error {
 // The given directory must be adjacent to the directory that the explorer is currently in.
 func (e *explorer) MoveOne(nextDirectory string) error {
 	// Remove trailing forward slashes from nextDirectory
-	if nextDirectory[len(nextDirectory) - 1] == '/' {
-		nextDirectory = nextDirectory[:len(nextDirectory) - 1]
+	if nextDirectory[len(nextDirectory)-1] == '/' {
+		nextDirectory = nextDirectory[:len(nextDirectory)-1]
 	}
-	
+
 	if nextDirectory == "." {
 		return nil
 	} else if nextDirectory == ".." {
