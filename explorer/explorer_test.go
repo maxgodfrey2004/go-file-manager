@@ -19,10 +19,10 @@ import (
 )
 
 func TestDirectoryExists(t *testing.T) {
-	t.Log(directoryExists("/")) // exists
+	t.Log(directoryExists("/"))              // exists
 	t.Log(directoryExists("/doesnotexist/")) // does not exist
-	t.Log(directoryExists("/bin")) // exists
-	t.Log(directoryExists("/bin/bash")) // not a directory
+	t.Log(directoryExists("/bin"))           // exists
+	t.Log(directoryExists("/bin/bash"))      // not a directory
 }
 
 func TestMoveOne(t *testing.T) {
