@@ -15,12 +15,30 @@
 package textrenderer
 
 import (
+	"strconv"
 	"testing"
 )
+
+func TestRender(t *testing.T) {
+	tr := New()
+	var dispArray []string
+	for i := 1; i <= 40; i++ {
+		dispArray = append(dispArray, "Test "+strconv.Itoa(i))
+	}
+	tr.Text = dispArray
+	tr.SelectedIndex = 12
+	tr.StartIndex = 10
+
+	if err := tr.RenderWithScrollback(); err != nil {
+		t.Fatal(err)
+	}
+}
 
 func TestNew(t *testing.T) {
 	tr := New()
 	t.Log(tr.Text)
+	t.Log(tr.SelectedIndex)
+	t.Log(tr.StartIndex)
 }
 
 func TestTerminalDimensions(t *testing.T) {
