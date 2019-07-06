@@ -15,12 +15,12 @@
 package textrenderer
 
 import (
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/nsf/termbox-go"
 )
 
 // min returns the minimum of two integers. Strangely, math.Min takes two float64 variables as
@@ -36,31 +36,6 @@ type textrenderer struct {
 	SelectedIndex int
 	StartIndex    int
 	Text          []string
-}
-
-// render displays the selected window of text on the terminal screen. The selected file will be
-// displayed with a blue background, indicative of its selection. If told to show scrollback, it
-// will in turn notify the ClearScreen method; and scrollback will be preserved.
-func (t *textrenderer) render(showScrollback bool) error {
-	t.ClearScreen(showScrollback)
-	termHeight, _, err := t.TerminalDimensions()
-	if err != nil {
-		return err
-	}
-
-	selected := color.New(color.FgWhite, color.BgBlue)
-	endIndex := min(t.StartIndex+termHeight, len(t.Text))
-	for i := t.StartIndex; i < endIndex; i++ {
-		if i == t.SelectedIndex {
-			if _, err := selected.Println(t.Text[i]); err != nil {
-				return err
-			}
-		} else {
-			color.White(t.Text[i])
-		}
-	}
-
-	return nil
 }
 
 // CurrentSelected returns the element of the textrenderer's Text attribute which is currently
@@ -82,21 +57,27 @@ func (t *textrenderer) Display(text []string) error {
 	return nil
 }
 
-// Render displays the selected window of text on the terminal screen. No scrollback will be
-// kept when the screen is cleared.
+// render displays the selected window of text on the terminal screen. The selected file will be
+// displayed with a blue background, indicative of its selection.
 func (t *textrenderer) Render() error {
-	if err := t.render(false); err != nil {
+	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+	termHeight, _, err := t.TerminalDimensions()
+	if err != nil {
 		return err
 	}
-	return nil
-}
 
-// RenderWithScrollback displays the selected window of text on the terminal screen. When the
-// screen is cleared, scrollback will be preserved.
-func (t *textrenderer) RenderWithScrollback() error {
-	if err := t.render(true); err != nil {
-		return err
+	selected := color.New(color.FgWhite, color.BgBlue)
+	endIndex := min(t.StartIndex+termHeight, len(t.Text))
+	for i := t.StartIndex; i < endIndex; i++ {
+		if i == t.SelectedIndex {
+			if _, err := selected.Println(t.Text[i]); err != nil {
+				return err
+			}
+		} else {
+			color.White(t.Text[i])
+		}
 	}
+
 	return nil
 }
 
@@ -116,14 +97,6 @@ func (t *textrenderer) TerminalDimensions() (int, int, error) {
 	width, _ := strconv.Atoi(strings.TrimRight(string(columnsOutput), " \n"))
 
 	return height, width, nil
-}
-
-// ClearScreen clears the terminal screen. If told to show scrollback, the method will append
-// a -l flag to the system call "clear" being made. This will preserve scrollback.
-func (t *textrenderer) ClearScreen(showScrollback bool) {
-	cmd := exec.Command("clear")
-	cmd.Stdout = os.Stdout
-	cmd.Run()
 }
 
 // New returns a new instance of the textrenderer type.

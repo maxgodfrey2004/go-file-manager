@@ -29,7 +29,7 @@ func TestRender(t *testing.T) {
 	tr.SelectedIndex = 12
 	tr.StartIndex = 10
 
-	if err := tr.RenderWithScrollback(); err != nil {
+	if err := tr.Render(); err != nil {
 		t.Fatal(err)
 	}
 }
