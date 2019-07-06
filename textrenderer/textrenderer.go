@@ -63,6 +63,12 @@ func (t *textrenderer) render(showScrollback bool) error {
 	return nil
 }
 
+// CurrentSelected returns the element of the textrenderer's Text attribute which is currently
+// selected.
+func (t *textrenderer) CurrentSelected() string {
+	return t.Text[t.SelectedIndex]
+}
+
 // Display reassigns the lines which the textrenderer will be displaying, and then renders them
 // on the terminal screen.
 func (t *textrenderer) Display(text []string) error {
