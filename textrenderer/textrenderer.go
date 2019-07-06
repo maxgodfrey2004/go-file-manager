@@ -52,7 +52,9 @@ func (t *textrenderer) render(showScrollback bool) error {
 	endIndex := min(t.StartIndex+termHeight, len(t.Text))
 	for i := t.StartIndex; i < endIndex; i++ {
 		if i == t.SelectedIndex {
-			selected.Println(t.Text[i])
+			if _, err := selected.Println(t.Text[i]); err != nil {
+				return err
+			}
 		} else {
 			color.White(t.Text[i])
 		}
