@@ -31,8 +31,8 @@ const (
 
 // Movement directions
 const (
-	DOWN = -1
-	UP   = 1
+	DOWN = 1
+	UP   = -1
 )
 
 type keypress struct {
@@ -75,9 +75,9 @@ func listenForKeypress(ch chan keypress) {
 func keyToDirection(key termbox.Key) int {
 	switch key {
 	case termbox.KeyArrowDown:
-		return 1
+		return DOWN
 	case termbox.KeyArrowUp:
-		return -1
+		return UP
 	default:
 		return 0
 	}
@@ -89,7 +89,9 @@ func startExplorer() {
 	}
 	defer termbox.Close()
 
-	nav.MoveAbsolute("~")
+	if err := nav.MoveAbsolute("~"); err != nil {
+		panic(err)
+	}
 	dirContents, err := nav.List(false)
 	if err != nil {
 		panic(err)
@@ -117,17 +119,21 @@ mainloop:
 				} else if newIndex < screen.StartIndex {
 					screen.StartIndex--
 				}
-				screen.Render()
+				if err := screen.Render(); err != nil {
+					panic(err)
+				}
 			case MOVE:
 				nextDir := screen.CurrentSelected()
 				if err := explorer.DirectoryExists(nav.Path + "/" + nextDir); err == nil {
-					nav.MoveOne(nextDir)
+					if err := nav.MoveOne(nextDir); err != nil {
+						panic(err)
+					}
 					dirContents, err := nav.List(false)
 					if err != nil {
 						panic(nav.Path)
 					}
 					if err := screen.Display(dirContents); err != nil {
-						break
+						panic(err)
 					}
 				}
 			case QUIT:
