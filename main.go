@@ -15,8 +15,8 @@
 package main
 
 import (
-	"./explorer"
-	"./textrenderer"
+	"github.com/maxgodfrey2004/go-file-manager/explorer"
+	"github.com/maxgodfrey2004/go-file-manager/textrenderer"
 	"github.com/nsf/termbox-go"
 )
 
@@ -88,7 +88,7 @@ func startExplorer() {
 		panic(err)
 	}
 	defer termbox.Close()
-	
+
 	nav.MoveAbsolute("~")
 	dirContents, err := nav.List(false)
 	if err != nil {
@@ -99,7 +99,7 @@ func startExplorer() {
 	}
 
 	go listenForKeypress(keypressChan)
-	
+
 mainloop:
 	for {
 		select {

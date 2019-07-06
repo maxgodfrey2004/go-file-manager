@@ -25,7 +25,7 @@ func (e *explorer) List(listAll bool) ([]string, error) {
 	if e.Path != "" {
 		contents = append(contents, "..")
 	}
-	
+
 	f, err := os.Open(e.Path + "/")
 	if err != nil {
 		return contents, err
