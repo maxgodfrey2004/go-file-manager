@@ -21,8 +21,12 @@ import (
 // List returns the contents of the directory which the explorer is currently in. Given a bool,
 // if true it will include files and directories prefixed with a '.', otherwise it will not.
 func (e *explorer) List(listAll bool) ([]string, error) {
-	var contents []string
-	f, err := os.Open(e.Path)
+	contents := []string{"."}
+	if e.Path != "" {
+		contents = append(contents, "..")
+	}
+
+	f, err := os.Open(e.Path + "/")
 	if err != nil {
 		return contents, err
 	}
@@ -51,8 +55,12 @@ func (e *explorer) List(listAll bool) ([]string, error) {
 // be ignored. Given a bool, if true it will include directories with a leading '.', otherwise it
 // will not.
 func (e *explorer) ListDirectories(listAll bool) ([]string, error) {
-	var directories []string
-	f, err := os.Open(e.Path)
+	directories := []string{"."}
+	if e.Path != "" {
+		directories = append(directories, "..")
+	}
+
+	f, err := os.Open(e.Path + "/")
 	if err != nil {
 		return directories, err
 	}
@@ -83,7 +91,7 @@ func (e *explorer) ListDirectories(listAll bool) ([]string, error) {
 // Given a bool, if true it will include files prefixed with a '.', otherwise it will not.
 func (e *explorer) ListFiles(listAll bool) ([]string, error) {
 	var files []string
-	f, err := os.Open(e.Path)
+	f, err := os.Open(e.Path + "/")
 	if err != nil {
 		return files, err
 	}

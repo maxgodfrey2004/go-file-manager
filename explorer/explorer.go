@@ -21,8 +21,8 @@ import (
 	"strings"
 )
 
-// directoryExists determines whether or not a directory exists
-func directoryExists(filePath string) error {
+// DirectoryExists determines whether or not a directory exists
+func DirectoryExists(filePath string) error {
 	fileType, err := os.Stat(filePath)
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ func (e *explorer) MoveAbsolute(path string) error {
 		path = e.CurrentUser.HomeDir + path[1:]
 	}
 
-	if err := directoryExists(path); err != nil {
+	if err := DirectoryExists(path); err != nil {
 		return err
 	}
 	e.Path = path
@@ -99,7 +99,7 @@ func (e *explorer) MoveOne(nextDirectory string) error {
 	}
 
 	nextPath := e.Path + "/" + nextDirectory
-	if err := directoryExists(nextPath); err != nil {
+	if err := DirectoryExists(nextPath); err != nil {
 		return err
 	}
 	e.Path = nextPath
