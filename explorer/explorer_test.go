@@ -35,6 +35,10 @@ func TestMoveOne(t *testing.T) {
 
 	err3 := e.MoveOne("bin/")
 	t.Log("e.Path:", e.Path, "error:", err3)
+	err4 := e.MoveOne(".")
+	t.Log("e.Path:", e.Path, "error:", err4)
+	err5 := e.MoveOne("doesnotexist")
+	t.Log("e.Path:", e.Path, "error:", err5)
 }
 
 func TestMoveMultiple(t *testing.T) {
@@ -44,6 +48,8 @@ func TestMoveMultiple(t *testing.T) {
 
 	err2 := e.MoveMultiple("bin/../bin/../")
 	t.Log("e.Path:", e.Path, "error:", err2)
+	err3 := e.MoveMultiple("doesnotexist/doesnotexist")
+	t.Log("e.Path:", e.Path, "error:", err3)
 }
 
 func TestMoveAbsolute(t *testing.T) {
