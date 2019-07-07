@@ -7,7 +7,6 @@ go_import_path: github.com/maxgodfrey2004/go-file-manager
 
 install:
  - go get -t ./...
- - go get github.com/fatih/color
  - go get github.com/nsf/termbox-go
 
 script: 

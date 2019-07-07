@@ -22,12 +22,12 @@ import (
 func TestRender(t *testing.T) {
 	tr := New()
 	var dispArray []string
-	for i := 1; i <= 40; i++ {
+	for i := 0; i <= 40; i++ {
 		dispArray = append(dispArray, "Test "+strconv.Itoa(i))
 	}
 	tr.Text = dispArray
-	tr.SelectedIndex = 12
-	tr.StartIndex = 10
+	tr.SelectedIndex = 2
+	tr.StartIndex = 1
 
 	if err := tr.Render(); err != nil {
 		t.Fatal(err)
@@ -39,14 +39,4 @@ func TestNew(t *testing.T) {
 	t.Log(tr.Text)
 	t.Log(tr.SelectedIndex)
 	t.Log(tr.StartIndex)
-}
-
-func TestTerminalDimensions(t *testing.T) {
-	tr := New()
-	height, width, err := tr.TerminalDimensions()
-	if err == nil {
-		t.Log("Height:", height, "Width:", width)
-	} else {
-		t.Fatal("ERROR:", err)
-	}
 }
