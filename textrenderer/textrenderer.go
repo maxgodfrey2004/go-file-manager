@@ -15,12 +15,12 @@
 package textrenderer
 
 import (
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/nsf/termbox-go"
 )
 
 // min returns the minimum of two integers. Strangely, math.Min takes two float64 variables as
@@ -60,7 +60,9 @@ func (t *textrenderer) Display(text []string) error {
 // render displays the selected window of text on the terminal screen. The selected file will be
 // displayed with a blue background, indicative of its selection.
 func (t *textrenderer) Render() error {
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+	if err := t.ClearScreen(); err != nil {
+		return err
+	}
 	termHeight, _, err := t.TerminalDimensions()
 	if err != nil {
 		return err
@@ -97,6 +99,16 @@ func (t *textrenderer) TerminalDimensions() (int, int, error) {
 	width, _ := strconv.Atoi(strings.TrimRight(string(columnsOutput), " \n"))
 
 	return height, width, nil
+}
+
+// ClearScreen clears the terminal screen.
+func (t *textrenderer) ClearScreen() error {
+	cmd := exec.Command("clear")
+	cmd.Stdout = os.Stdout
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // New returns a new instance of the textrenderer type.

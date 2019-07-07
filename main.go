@@ -20,33 +20,46 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
+// KeyEvent enumerates the different actions a user may take when using the file manager.
 type KeyEvent int
 
-// Keyboard events
 const (
-	RESELECT KeyEvent = iota + 1
-	MOVE
-	QUIT
+	// Reselect represents the user pressing a navigation key, and requiring the selected file
+	// to be rendered in a different place (in the same directory).
+	Reselect KeyEvent = iota + 1
+
+	// Move represents the user selecting a directory, and being taken to a new location in the
+	// file system.
+	Move
+
+	// Quit represents the termination of the application.
+	Quit
 )
 
 // Movement directions
 const (
-	DOWN = 1
-	UP   = -1
+	Down = 1
+	Up   = -1
 )
 
+// keypress represents a physical key being pressed on the keyboard.
 type keypress struct {
 	EventType KeyEvent
 	Key       termbox.Key
 }
 
 var (
+	// nav is used to traverse the user's file system.
 	nav    = explorer.New()
+	// screen is used to render colored output on the terminal.
 	screen = textrenderer.New()
 
+	// keypressChan is used to register incoming keypresses.
 	keypressChan = make(chan keypress)
 )
 
+// listenForKeypress indefinitely listens for keyboard input, and sends it to a specified channel.
+// Note that ths method is intended to be called asynchronously (ie. as a goroutine).
 func listenForKeypress(ch chan keypress) {
 	termbox.SetInputMode(termbox.InputEsc)
 
@@ -55,15 +68,15 @@ func listenForKeypress(ch chan keypress) {
 		case termbox.EventKey:
 			switch ev.Key {
 			case termbox.KeyArrowDown:
-				ch <- keypress{EventType: RESELECT, Key: ev.Key}
+				ch <- keypress{EventType: Reselect, Key: ev.Key}
 			case termbox.KeyArrowUp:
-				ch <- keypress{EventType: RESELECT, Key: ev.Key}
+				ch <- keypress{EventType: Reselect, Key: ev.Key}
 			case termbox.KeyArrowLeft, termbox.KeyEnter:
-				ch <- keypress{EventType: MOVE, Key: ev.Key}
+				ch <- keypress{EventType: Move, Key: ev.Key}
 			default:
 				switch ev.Ch {
 				case rune('Q'), rune('q'):
-					ch <- keypress{EventType: QUIT, Key: ev.Key}
+					ch <- keypress{EventType: Quit, Key: ev.Key}
 				}
 			}
 		case termbox.EventError:
@@ -72,17 +85,56 @@ func listenForKeypress(ch chan keypress) {
 	}
 }
 
+// move moves nav, the explorer, to the current directory which the user has selected.
+func move() {
+	nextDir := screen.CurrentSelected()
+	if err := explorer.DirectoryExists(nav.Path + "/" + nextDir); err == nil {
+		if err := nav.MoveOne(nextDir); err != nil {
+			panic(err)
+		}
+		dirContents, err := nav.List(false)
+		if err != nil {
+			panic(nav.Path)
+		}
+		if err := screen.Display(dirContents); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// keyToDirection converts a termbox Key code into a direction for the selected file or directory
+// when the up or down arrow keys are pressed.
 func keyToDirection(key termbox.Key) int {
 	switch key {
 	case termbox.KeyArrowDown:
-		return DOWN
+		return Down
 	case termbox.KeyArrowUp:
-		return UP
+		return Up
 	default:
 		return 0
 	}
 }
 
+// reselect moves the screen's display of files when the user presses either an up or down arrow
+// key.
+func reselect(ev keypress) {
+	newIndex := screen.SelectedIndex + keyToDirection(ev.Key)
+	if newIndex < 0 || newIndex >= len(screen.Text) {
+		return
+	}
+	_, height := termbox.Size()
+	screen.SelectedIndex = newIndex
+	if newIndex >= screen.StartIndex+height {
+		screen.StartIndex++
+	} else if newIndex < screen.StartIndex {
+		screen.StartIndex--
+	}
+	if err := screen.Render(); err != nil {
+		panic(err)
+	}
+}
+
+// startExplorer runs the file manager until a Quit event is sent.
 func startExplorer() {
 	if err := termbox.Init(); err != nil {
 		panic(err)
@@ -101,42 +153,17 @@ func startExplorer() {
 	}
 
 	go listenForKeypress(keypressChan)
-
+	
 mainloop:
 	for {
 		select {
 		case ev := <-keypressChan:
 			switch ev.EventType {
-			case RESELECT:
-				newIndex := screen.SelectedIndex + keyToDirection(ev.Key)
-				if newIndex < 0 || newIndex >= len(screen.Text) {
-					break
-				}
-				_, height := termbox.Size()
-				screen.SelectedIndex = newIndex
-				if newIndex >= screen.StartIndex+height {
-					screen.StartIndex++
-				} else if newIndex < screen.StartIndex {
-					screen.StartIndex--
-				}
-				if err := screen.Render(); err != nil {
-					panic(err)
-				}
-			case MOVE:
-				nextDir := screen.CurrentSelected()
-				if err := explorer.DirectoryExists(nav.Path + "/" + nextDir); err == nil {
-					if err := nav.MoveOne(nextDir); err != nil {
-						panic(err)
-					}
-					dirContents, err := nav.List(false)
-					if err != nil {
-						panic(nav.Path)
-					}
-					if err := screen.Display(dirContents); err != nil {
-						panic(err)
-					}
-				}
-			case QUIT:
+			case Reselect:
+				reselect(ev)
+			case Move:
+				move()
+			case Quit:
 				break mainloop
 			}
 		}
