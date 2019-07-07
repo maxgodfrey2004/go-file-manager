@@ -60,15 +60,13 @@ func (t *textrenderer) Display(header string, text []string) error {
 	t.SelectedIndex = 0
 	t.StartIndex = 0
 
-	if err := t.Render(); err != nil {
-		return err
-	}
+	t.Render()
 	return nil
 }
 
 // Render displays the selected window of text and respective header on the terminal screen. The
 // selected file will be displayed with a caret, indicative of its selection.
-func (t *textrenderer) Render() error {
+func (t *textrenderer) Render() {
 	termWidth, termHeight := termbox.Size()
 	if err := termbox.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
 		panic(err)
@@ -95,8 +93,6 @@ func (t *textrenderer) Render() error {
 		}
 	}
 	termbox.Flush()
-
-	return nil
 }
 
 // TextViewSize returns the dimensions of the box in which textrenderer.Text is stored

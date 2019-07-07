@@ -29,9 +29,7 @@ func TestRender(t *testing.T) {
 	tr.SelectedIndex = 2
 	tr.StartIndex = 1
 
-	if err := tr.Render(); err != nil {
-		t.Fatal(err)
-	}
+	tr.Render()
 }
 
 func TestNew(t *testing.T) {

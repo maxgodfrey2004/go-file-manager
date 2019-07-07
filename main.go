@@ -32,9 +32,6 @@ const (
 	// file system.
 	Move
 
-	// Resize represents a resize of the terminal window.
-	Resize
-
 	// Quit represents the termination of the application.
 	Quit
 )
@@ -136,9 +133,7 @@ func reselect(ev keypress) {
 	} else if newIndex < screen.StartIndex {
 		screen.StartIndex--
 	}
-	if err := screen.Render(); err != nil {
-		panic(err)
-	}
+	screen.Render()
 }
 
 // startExplorer runs the file manager until a Quit event is sent.
