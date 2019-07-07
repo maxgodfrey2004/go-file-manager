@@ -20,7 +20,9 @@ import (
 
 func TestList(t *testing.T) {
 	e := New()
-	e.MoveAbsolute("~")
+	if err := e.MoveAbsolute("~"); err != nil {
+		t.Fatal(err)
+	}
 	all, _ := e.List(false)
 	t.Log(all)
 	all, _ = e.List(true)
@@ -29,7 +31,9 @@ func TestList(t *testing.T) {
 
 func TestListDirectories(t *testing.T) {
 	e := New()
-	e.MoveAbsolute("~")
+	if err := e.MoveAbsolute("~"); err != nil {
+		t.Fatal(err)
+	}
 	directories, _ := e.ListDirectories(false)
 	t.Log(directories)
 	directories, _ = e.ListDirectories(true)
@@ -38,7 +42,9 @@ func TestListDirectories(t *testing.T) {
 
 func TestListFiles(t *testing.T) {
 	e := New()
-	e.MoveAbsolute("~")
+	if err := e.MoveAbsolute("~"); err != nil {
+		t.Fatal(err)
+	}
 	files, _ := e.ListFiles(false)
 	t.Log(files)
 	files, _ = e.ListFiles(true)
