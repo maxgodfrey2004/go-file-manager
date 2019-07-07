@@ -20,14 +20,17 @@ import (
 
 // X positions to render various elements of the explorer.
 const (
-	CaretRenderX = 1
-	FileRenderX  = 3
+	CaretRenderX       = 1
+	FilePreviewRenderY = 2
+	FileRenderX        = 3
 )
 
 // Modifiers affecting the size of the view through which textrenderer.Text is displayed.
 const (
 	textHeightModifier = 1
 	textWidthModifier  = 0
+
+	filePreviewHeightModifier = 1
 )
 
 // min returns the minimum of two integers. Strangely, math.Min takes two float64 variables as
@@ -40,10 +43,11 @@ func min(a, b int) int {
 }
 
 type textrenderer struct {
-	Header        string
-	SelectedIndex int
-	StartIndex    int
-	Text          []string
+	Header        string   // The string to render above Text.
+	SelectedIndex int      // The selected index in Text.
+	StartIndex    int      // Start rendering text from this index in Text.
+	StopRight     int      // Stop rendering text past this point.
+	Text          []string // The text which the renderer draws on the screen.
 }
 
 // CurrentSelected returns the element of the textrenderer's Text attribute which is currently
@@ -63,15 +67,23 @@ func (t *textrenderer) Display(header string, text []string) {
 	t.Render()
 }
 
+// RecalculateBounds recalculates the positions on the terminal at which textrenderer stops
+// rendering text.
+func (t *textrenderer) RecalculateBounds() {
+	width, _ := termbox.Size()
+	t.StopRight = width / 2
+}
+
 // Render displays the selected window of text and respective header on the terminal screen. The
 // selected file will be displayed with a caret, indicative of its selection.
 func (t *textrenderer) Render() {
-	termWidth, termHeight := termbox.Size()
+	t.RecalculateBounds()
+	_, termHeight := termbox.Size()
 	if err := termbox.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
 		panic(err)
 	}
 
-	headerEnd := min(termWidth, len(t.Header))
+	headerEnd := min(t.StopRight, len(t.Header))
 	for i := 0; i < headerEnd; i++ {
 		termbox.SetCell(i, 0, rune(t.Header[i]), termbox.ColorDefault, termbox.ColorDefault)
 	}
@@ -91,10 +103,32 @@ func (t *textrenderer) Render() {
 			termbox.SetCell(FileRenderX+j, yCoord, rune(t.Text[i][j]), fgColor, bgColor)
 		}
 	}
+
 	termbox.Flush()
 }
 
-// TextViewSize returns the dimensions of the box in which textrenderer.Text is stored
+func (t *textrenderer) RenderPreview(preview []string) {
+	t.RecalculateBounds()
+	previewX := t.StopRight + 2
+	width, _ := termbox.Size()
+
+	for i := 0; i < len(preview); i++ {
+		y := i + FilePreviewRenderY
+		for j := 0; j < min(width-previewX, len(preview[i])); j++ {
+			termbox.SetCell(previewX+j, y, rune(preview[i][j]), termbox.ColorDefault, termbox.ColorDefault)
+		}
+	}
+
+	termbox.Flush()
+}
+
+// PreviewSize returns the dimensions of the box in which the file preview is rendered.
+func (t *textrenderer) PreviewHeight() int {
+	_, height := termbox.Size()
+	return height - filePreviewHeightModifier - FilePreviewRenderY
+}
+
+// TextViewSize returns the dimensions of the box in which textrenderer.Text is stored.
 func (t *textrenderer) TextViewSize() (int, int) {
 	width, height := termbox.Size()
 	return width - textWidthModifier, height - textHeightModifier

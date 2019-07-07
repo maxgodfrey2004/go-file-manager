@@ -15,6 +15,7 @@
 package explorer
 
 import (
+	"bufio"
 	"os"
 )
 
@@ -123,4 +124,22 @@ func (e *explorer) ListFiles(listAll bool) ([]string, error) {
 		}
 	}
 	return files, nil
+}
+
+// ReadN reads the first N lines of a
+func (e *explorer) ReadN(fileName string, n int) ([]string, error) {
+	var contents []string
+	file, err := os.Open(e.Path + "/" + fileName)
+	if err != nil {
+		return contents, err
+	}
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	for i := 0; i < n && scanner.Scan(); i++ {
+		contents = append(contents, scanner.Text())
+	}
+
+	file.Close()
+	return contents, nil
 }

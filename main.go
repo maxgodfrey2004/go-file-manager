@@ -142,6 +142,15 @@ func reselect(ev keypress) {
 		screen.StartIndex--
 	}
 	screen.Render()
+
+	curSelected := screen.CurrentSelected()
+	if curSelected[len(curSelected)-1] != '/' {
+		preview, err := nav.ReadN(curSelected, screen.PreviewHeight())
+		if err != nil {
+			panic(err)
+		}
+		screen.RenderPreview(preview)
+	}
 }
 
 // startExplorer runs the file manager until a Quit event is sent.
