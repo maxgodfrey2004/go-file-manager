@@ -71,7 +71,7 @@ func listenForKeypress(ch chan keypress) {
 				ch <- keypress{EventType: Reselect, Key: ev.Key}
 			case termbox.KeyArrowUp:
 				ch <- keypress{EventType: Reselect, Key: ev.Key}
-			case termbox.KeyArrowLeft, termbox.KeyEnter:
+			case termbox.KeyArrowRight, termbox.KeyEnter:
 				ch <- keypress{EventType: Move, Key: ev.Key}
 			default:
 				switch ev.Ch {
@@ -96,7 +96,7 @@ func move() {
 		if err != nil {
 			panic(nav.Path)
 		}
-		if err := screen.Display(dirContents); err != nil {
+		if err := screen.Display(nav.Path+"/", dirContents); err != nil {
 			panic(err)
 		}
 	}
@@ -123,7 +123,7 @@ func reselect(ev keypress) {
 		return
 	}
 
-	_, height := termbox.Size()
+	_, height := screen.TextViewSize()
 	screen.SelectedIndex = newIndex
 	if newIndex >= screen.StartIndex+height {
 		screen.StartIndex++
@@ -149,7 +149,7 @@ func startExplorer() {
 	if err != nil {
 		panic(err)
 	}
-	if err := screen.Display(dirContents); err != nil {
+	if err := screen.Display(nav.Path+"/", dirContents); err != nil {
 		panic(err)
 	}
 
