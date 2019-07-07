@@ -58,9 +58,10 @@ var (
 	keypressChan = make(chan keypress)
 )
 
-// listenForKeypress indefinitely listens for keyboard input, and sends it to a specified channel.
+// listenForEvents indefinitely listens for termbox events. Any events that take the form of
+// keyboard input are sent to a specified channel, where they will be proecessed externally.
 // Note that ths method is intended to be called asynchronously (ie. as a goroutine).
-func listenForKeypress(ch chan keypress) {
+func listenForEvents(ch chan keypress) {
 	termbox.SetInputMode(termbox.InputEsc)
 
 	for {
@@ -81,6 +82,8 @@ func listenForKeypress(ch chan keypress) {
 			}
 		case termbox.EventError:
 			panic(ev.Err)
+		case termbox.EventResize:
+			screen.Render()
 		}
 	}
 }
@@ -130,9 +133,7 @@ func reselect(ev keypress) {
 	} else if newIndex < screen.StartIndex {
 		screen.StartIndex--
 	}
-	if err := screen.Render(); err != nil {
-		panic(err)
-	}
+	screen.Render()
 }
 
 // startExplorer runs the file manager until a Quit event is sent.
@@ -153,7 +154,7 @@ func startExplorer() {
 		panic(err)
 	}
 
-	go listenForKeypress(keypressChan)
+	go listenForEvents(keypressChan)
 
 mainloop:
 	for {
