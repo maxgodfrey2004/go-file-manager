@@ -21,9 +21,9 @@ import (
 // List returns the contents of the directory which the explorer is currently in. Given a bool,
 // if true it will include files and directories prefixed with a '.', otherwise it will not.
 func (e *explorer) List(listAll bool) ([]string, error) {
-	contents := []string{"."}
+	contents := []string{}
 	if e.Path != "" {
-		contents = append(contents, "..")
+		contents = append(contents, "../")
 	}
 
 	f, err := os.Open(e.Path + "/")
@@ -38,12 +38,20 @@ func (e *explorer) List(listAll bool) ([]string, error) {
 
 	if listAll {
 		for _, file := range fileInfo {
-			contents = append(contents, file.Name())
+			if file.IsDir() {
+				contents = append(contents, file.Name()+"/")
+			} else {
+				contents = append(contents, file.Name())
+			}
 		}
 	} else {
 		for _, file := range fileInfo {
 			if file.Name()[0] != '.' {
-				contents = append(contents, file.Name())
+				if file.IsDir() {
+					contents = append(contents, file.Name()+"/")
+				} else {
+					contents = append(contents, file.Name())
+				}
 			}
 		}
 	}
@@ -55,9 +63,9 @@ func (e *explorer) List(listAll bool) ([]string, error) {
 // be ignored. Given a bool, if true it will include directories with a leading '.', otherwise it
 // will not.
 func (e *explorer) ListDirectories(listAll bool) ([]string, error) {
-	directories := []string{"."}
+	directories := []string{}
 	if e.Path != "" {
-		directories = append(directories, "..")
+		directories = append(directories, "../")
 	}
 
 	f, err := os.Open(e.Path + "/")
@@ -73,13 +81,13 @@ func (e *explorer) ListDirectories(listAll bool) ([]string, error) {
 	if listAll {
 		for _, file := range fileInfo {
 			if file.IsDir() {
-				directories = append(directories, file.Name())
+				directories = append(directories, file.Name()+"/")
 			}
 		}
 	} else {
 		for _, file := range fileInfo {
 			if file.IsDir() && file.Name()[0] != '.' {
-				directories = append(directories, file.Name())
+				directories = append(directories, file.Name()+"/")
 			}
 		}
 	}
