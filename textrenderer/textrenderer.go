@@ -17,8 +17,6 @@ package textrenderer
 import (
 	"os"
 	"os/exec"
-	"strconv"
-	"strings"
 
 	"github.com/nsf/termbox-go"
 )
@@ -82,24 +80,6 @@ func (t *textrenderer) Render() error {
 	termbox.Flush()
 
 	return nil
-}
-
-// TerminalDimensions obtains the dimensions of the current terminal window and returns them.
-// Dimensions are returned with height first and width second. An error is also returned.
-func (t *textrenderer) TerminalDimensions() (int, int, error) {
-	rowsOutput, err := exec.Command("tput", "lines").Output()
-	if err != nil {
-		return -1, -1, err
-	}
-	height, _ := strconv.Atoi(strings.TrimRight(string(rowsOutput), " \n"))
-
-	columnsOutput, err := exec.Command("tput", "cols").Output()
-	if err != nil {
-		return -1, -1, err
-	}
-	width, _ := strconv.Atoi(strings.TrimRight(string(columnsOutput), " \n"))
-
-	return height, width, nil
 }
 
 // ClearScreen clears the terminal screen.

@@ -123,11 +123,7 @@ func reselect(ev keypress) {
 		return
 	}
 
-	height, _, err := screen.TerminalDimensions()
-	if err != nil {
-		panic(err)
-	}
-
+	_, height := termbox.Size()
 	screen.SelectedIndex = newIndex
 	if newIndex >= screen.StartIndex+height {
 		screen.StartIndex++

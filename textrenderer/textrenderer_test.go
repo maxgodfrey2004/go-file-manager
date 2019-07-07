@@ -40,13 +40,3 @@ func TestNew(t *testing.T) {
 	t.Log(tr.SelectedIndex)
 	t.Log(tr.StartIndex)
 }
-
-func TestTerminalDimensions(t *testing.T) {
-	tr := New()
-	height, width, err := tr.TerminalDimensions()
-	if err == nil {
-		t.Log("Height:", height, "Width:", width)
-	} else {
-		t.Fatal("ERROR:", err)
-	}
-}
