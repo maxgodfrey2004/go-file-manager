@@ -50,7 +50,7 @@ type keypress struct {
 
 var (
 	// nav is used to traverse the user's file system.
-	nav    = explorer.New()
+	nav = explorer.New()
 	// screen is used to render colored output on the terminal.
 	screen = textrenderer.New()
 
@@ -122,7 +122,12 @@ func reselect(ev keypress) {
 	if newIndex < 0 || newIndex >= len(screen.Text) {
 		return
 	}
-	_, height := termbox.Size()
+
+	height, _, err := screen.TerminalDimensions()
+	if err != nil {
+		panic(err)
+	}
+
 	screen.SelectedIndex = newIndex
 	if newIndex >= screen.StartIndex+height {
 		screen.StartIndex++
@@ -153,7 +158,7 @@ func startExplorer() {
 	}
 
 	go listenForKeypress(keypressChan)
-	
+
 mainloop:
 	for {
 		select {

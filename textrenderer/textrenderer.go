@@ -20,7 +20,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fatih/color"
+	"github.com/nsf/termbox-go"
+)
+
+const (
+	FileRenderX = 20
 )
 
 // min returns the minimum of two integers. Strangely, math.Min takes two float64 variables as
@@ -60,25 +64,22 @@ func (t *textrenderer) Display(text []string) error {
 // render displays the selected window of text on the terminal screen. The selected file will be
 // displayed with a blue background, indicative of its selection.
 func (t *textrenderer) Render() error {
-	if err := t.ClearScreen(); err != nil {
-		return err
-	}
-	termHeight, _, err := t.TerminalDimensions()
-	if err != nil {
-		return err
+	_, termHeight := termbox.Size()
+	if err := termbox.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
+		panic(err)
 	}
 
-	selected := color.New(color.FgWhite, color.BgBlue)
 	endIndex := min(t.StartIndex+termHeight, len(t.Text))
 	for i := t.StartIndex; i < endIndex; i++ {
+		bgColor := termbox.ColorDefault
 		if i == t.SelectedIndex {
-			if _, err := selected.Println(t.Text[i]); err != nil {
-				return err
-			}
-		} else {
-			color.White(t.Text[i])
+			bgColor = termbox.ColorCyan
+		}
+		for j := 0; j < len(t.Text[i]); j++ {
+			termbox.SetCell(FileRenderX+j, i-t.StartIndex, rune(t.Text[i][j]), termbox.ColorDefault, bgColor)
 		}
 	}
+	termbox.Flush()
 
 	return nil
 }
