@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.com/maxgodfrey2004/go-file-manager.svg?branch=master)](https://travis-ci.com/maxgodfrey2004/go-file-manager)
-[![Coverage Status](https://coveralls.io/repos/github/maxgodfrey2004/go-file-manager/badge.svg?branch=master)](https://coveralls.io/github/maxgodfrey2004/go-file-manager?branch=master?service=github)
 [![Go Report Card](https://goreportcard.com/badge/github.com/maxgodfrey2004/go-file-manager)](https://goreportcard.com/report/github.com/maxgodfrey2004/go-file-manager)
 [![GolangCI](https://golangci.com/badges/github.com/maxgodfrey2004/go-file-manager.svg)](https://golangci.com/r/github.com/maxgodfrey2004/go-file-manager)
 

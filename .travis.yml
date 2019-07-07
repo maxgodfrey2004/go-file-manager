@@ -5,13 +5,9 @@ go:
 
 go_import_path: github.com/maxgodfrey2004/go-file-manager
 
-before_install:
- - go get github.com/mattn/goveralls
-
 install:
  - go get -t ./...
  - go get github.com/nsf/termbox-go
 
 script: 
- - go test -v -covermode=count ./...
- - $GOPATH/bin/goveralls -service=travis-ci
+ - go test -v -race -covermode=atomic ./...
