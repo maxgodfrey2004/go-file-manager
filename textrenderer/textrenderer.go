@@ -54,14 +54,13 @@ func (t *textrenderer) CurrentSelected() string {
 
 // Display reassigns the lines which the textrenderer will be displaying, and their respective
 // header. It then renders them on the terminal screen.
-func (t *textrenderer) Display(header string, text []string) error {
+func (t *textrenderer) Display(header string, text []string) {
 	t.Header = header
 	t.Text = text
 	t.SelectedIndex = 0
 	t.StartIndex = 0
 
 	t.Render()
-	return nil
 }
 
 // Render displays the selected window of text and respective header on the terminal screen. The
