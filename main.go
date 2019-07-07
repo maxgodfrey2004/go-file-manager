@@ -32,6 +32,10 @@ const (
 	// file system.
 	Move
 
+	// ToggleListAll represents the user toggling the state of whether or not they want to see
+	// directory contents whose names contain leading `.` characters.
+	ToggleListAll
+
 	// Quit represents the termination of the application.
 	Quit
 )
@@ -56,6 +60,10 @@ var (
 
 	// keypressChan is used to register incoming keypresses.
 	keypressChan = make(chan keypress)
+
+	// listAll is used to determine whether the user wishes to see directory contents with
+	// a leading `.`. By default, we assume that they do not.
+	listAll = false
 )
 
 // listenForEvents indefinitely listens for termbox events. Any events that take the form of
@@ -78,6 +86,8 @@ func listenForEvents(ch chan keypress) {
 				switch ev.Ch {
 				case rune('Q'), rune('q'):
 					ch <- keypress{EventType: Quit, Key: ev.Key}
+				case rune('A'), rune('a'):
+					ch <- keypress{EventType: ToggleListAll, Key: ev.Key}
 				}
 			}
 		case termbox.EventError:
@@ -95,13 +105,11 @@ func move() {
 		if err := nav.MoveOne(nextDir); err != nil {
 			panic(err)
 		}
-		dirContents, err := nav.List(false)
+		dirContents, err := nav.List(listAll)
 		if err != nil {
 			panic(nav.Path)
 		}
-		if err := screen.Display(nav.Path+"/", dirContents); err != nil {
-			panic(err)
-		}
+		screen.Display(nav.Path+"/", dirContents)
 	}
 }
 
@@ -146,13 +154,11 @@ func startExplorer() {
 	if err := nav.MoveAbsolute("~"); err != nil {
 		panic(err)
 	}
-	dirContents, err := nav.List(false)
+	dirContents, err := nav.List(listAll)
 	if err != nil {
 		panic(err)
 	}
-	if err := screen.Display(nav.Path+"/", dirContents); err != nil {
-		panic(err)
-	}
+	screen.Display(nav.Path+"/", dirContents)
 
 	go listenForEvents(keypressChan)
 
@@ -165,11 +171,22 @@ mainloop:
 				reselect(ev)
 			case Move:
 				move()
+			case ToggleListAll:
+				toggleListAll()
 			case Quit:
 				break mainloop
 			}
 		}
 	}
+}
+
+func toggleListAll() {
+	listAll = !listAll
+	dirContents, err := nav.List(listAll)
+	if err != nil {
+		panic(err)
+	}
+	screen.Display(nav.Path+"/", dirContents)
 }
 
 func main() {
