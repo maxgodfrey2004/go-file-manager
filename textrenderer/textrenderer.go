@@ -21,8 +21,10 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
+// X positions to render various elements of the explorer.
 const (
-	FileRenderX = 20
+	CaretRenderX = 1
+	FileRenderX  = 3
 )
 
 // min returns the minimum of two integers. Strangely, math.Min takes two float64 variables as
@@ -71,10 +73,14 @@ func (t *textrenderer) Render() error {
 	for i := t.StartIndex; i < endIndex; i++ {
 		bgColor := termbox.ColorDefault
 		if i == t.SelectedIndex {
-			bgColor = termbox.ColorCyan
+			termbox.SetCell(CaretRenderX, i-t.StartIndex, rune('>'), termbox.ColorDefault, termbox.ColorDefault)
+		}
+		fgColor := termbox.ColorDefault
+		if t.Text[i][len(t.Text[i])-1] == '/' {
+			fgColor = termbox.ColorBlue
 		}
 		for j := 0; j < len(t.Text[i]); j++ {
-			termbox.SetCell(FileRenderX+j, i-t.StartIndex, rune(t.Text[i][j]), termbox.ColorDefault, bgColor)
+			termbox.SetCell(FileRenderX+j, i-t.StartIndex, rune(t.Text[i][j]), fgColor, bgColor)
 		}
 	}
 	termbox.Flush()
