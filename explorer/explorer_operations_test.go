@@ -27,6 +27,10 @@ func TestList(t *testing.T) {
 	t.Log(all)
 	all, _ = e.List(true)
 	t.Log(all)
+
+	e.Path = "/doesnotexist"
+	all, err := e.List(false)
+	t.Log(all, err)
 }
 
 func TestListDirectories(t *testing.T) {
@@ -38,6 +42,10 @@ func TestListDirectories(t *testing.T) {
 	t.Log(directories)
 	directories, _ = e.ListDirectories(true)
 	t.Log(directories)
+
+	e.Path = "/doesnotexist"
+	all, err := e.ListDirectories(false)
+	t.Log(all, err)
 }
 
 func TestListFiles(t *testing.T) {
@@ -49,4 +57,8 @@ func TestListFiles(t *testing.T) {
 	t.Log(files)
 	files, _ = e.ListFiles(true)
 	t.Log(files)
+
+	e.Path = "/doesnotexist"
+	all, err := e.ListFiles(false)
+	t.Log(all, err)
 }
