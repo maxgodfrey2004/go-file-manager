@@ -15,6 +15,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/maxgodfrey2004/go-file-manager/explorer"
 	"github.com/maxgodfrey2004/go-file-manager/textrenderer"
 	"github.com/nsf/termbox-go"
@@ -59,7 +61,7 @@ var (
 	screen = textrenderer.New()
 
 	// keypressChan is used to register incoming keypresses.
-	keypressChan = make(chan keypress)
+	keypressChan chan keypress
 
 	// listAll is used to determine whether the user wishes to see directory contents with
 	// a leading `.`. By default, we assume that they do not.
@@ -68,7 +70,7 @@ var (
 
 // listenForEvents indefinitely listens for termbox events. Any events that take the form of
 // keyboard input are sent to a specified channel, where they will be proecessed externally.
-// Note that ths method is intended to be called asynchronously (ie. as a goroutine).
+// Note that this method is intended to be called asynchronously (ie. as a goroutine).
 func listenForEvents(ch chan keypress) {
 	termbox.SetInputMode(termbox.InputEsc)
 
@@ -82,6 +84,8 @@ func listenForEvents(ch chan keypress) {
 				ch <- keypress{EventType: Reselect, Key: ev.Key}
 			case termbox.KeyArrowRight, termbox.KeyEnter:
 				ch <- keypress{EventType: Select, Key: ev.Key}
+			case termbox.KeyCtrlC:
+				ch <- keypress{EventType: Quit, Key: ev.Key}
 			default:
 				switch ev.Ch {
 				case rune('Q'), rune('q'):
@@ -92,6 +96,8 @@ func listenForEvents(ch chan keypress) {
 			}
 		case termbox.EventError:
 			panic(ev.Err)
+		case termbox.EventInterrupt:
+			return
 		case termbox.EventResize:
 			screen.Render(genPreview())
 		}
@@ -172,29 +178,32 @@ func selectContents() {
 	if curSelected[len(curSelected)-1] == explorer.PathSepChar {
 		moveDirectory()
 	} else {
+		pathCopy := nav.GetPath()
 		if err := nav.View(curSelected); err != nil {
 			panic(err)
 		}
-		termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+		termbox.Interrupt()
+		startExplorer(pathCopy)
+		/*termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
 		dirContents, err := nav.List(listAll)
 		if err != nil {
 			panic(err)
 		}
 		screen.Init(nav.GetPath(), dirContents)
-		screen.Display(nav.GetPath(), dirContents, genPreview())
+		screen.Display(nav.GetPath(), dirContents, genPreview())*/
 	}
 }
 
 // startExplorer runs the file manager until a Quit event is sent.
-func startExplorer() {
+func startExplorer(startDirectory string) {
 	if err := termbox.Init(); err != nil {
 		panic(err)
 	}
-	defer termbox.Close()
 
-	if err := nav.MoveAbsolute("~"); err != nil {
-		panic(err)
+	keypressChan = make(chan keypress)
+	if err := nav.MoveAbsolute(startDirectory); err != nil {
+		panic(startDirectory)
 	}
 	dirContents, err := nav.List(listAll)
 	if err != nil {
@@ -209,7 +218,6 @@ func startExplorer() {
 
 	go listenForEvents(keypressChan)
 
-mainloop:
 	for {
 		select {
 		case ev := <-keypressChan:
@@ -221,7 +229,8 @@ mainloop:
 			case ToggleListAll:
 				toggleListAll()
 			case Quit:
-				break mainloop
+				termbox.Close()
+				os.Exit(0)
 			}
 		}
 	}
@@ -238,5 +247,5 @@ func toggleListAll() {
 }
 
 func main() {
-	startExplorer()
+	startExplorer("~")
 }

@@ -26,7 +26,7 @@ import (
 func (e *explorer) List(listAll bool) ([]string, error) {
 	contents := []string{}
 	if e.Path != "" {
-		contents = append(contents, "../")
+		contents = append(contents, ".."+PathSep)
 	}
 
 	f, err := os.Open(e.GetPath())
@@ -42,7 +42,7 @@ func (e *explorer) List(listAll bool) ([]string, error) {
 	if listAll {
 		for _, file := range fileInfo {
 			if file.IsDir() {
-				contents = append(contents, file.Name()+"/")
+				contents = append(contents, file.Name()+PathSep)
 			} else {
 				contents = append(contents, file.Name())
 			}
@@ -51,7 +51,7 @@ func (e *explorer) List(listAll bool) ([]string, error) {
 		for _, file := range fileInfo {
 			if file.Name()[0] != '.' {
 				if file.IsDir() {
-					contents = append(contents, file.Name()+"/")
+					contents = append(contents, file.Name()+PathSep)
 				} else {
 					contents = append(contents, file.Name())
 				}
@@ -68,7 +68,7 @@ func (e *explorer) List(listAll bool) ([]string, error) {
 func (e *explorer) ListDirectories(listAll bool) ([]string, error) {
 	directories := []string{}
 	if e.Path != "" {
-		directories = append(directories, "../")
+		directories = append(directories, ".."+PathSep)
 	}
 
 	f, err := os.Open(e.GetPath())
@@ -84,13 +84,13 @@ func (e *explorer) ListDirectories(listAll bool) ([]string, error) {
 	if listAll {
 		for _, file := range fileInfo {
 			if file.IsDir() {
-				directories = append(directories, file.Name()+"/")
+				directories = append(directories, file.Name()+PathSep)
 			}
 		}
 	} else {
 		for _, file := range fileInfo {
 			if file.IsDir() && file.Name()[0] != '.' {
-				directories = append(directories, file.Name()+"/")
+				directories = append(directories, file.Name()+PathSep)
 			}
 		}
 	}
