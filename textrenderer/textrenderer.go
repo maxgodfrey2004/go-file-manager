@@ -45,6 +45,7 @@ func min(a, b int) int {
 
 type textrenderer struct {
 	Header        string   // The string to render above Text.
+	KeyFunctions  []string // The function of each command, rendered at the bottom of the terminal.
 	SelectedIndex int      // The selected index in Text.
 	StartIndex    int      // Start rendering text from this index in Text.
 	StopRight     int      // Stop rendering text past this point.
@@ -98,7 +99,7 @@ func (t *textrenderer) Render(preview []string) {
 		termbox.SetCell(i, 0, rune(t.Header[i]), termbox.ColorDefault, termbox.ColorDefault)
 	}
 
-	endIndex := min(t.StartIndex+termHeight-1, len(t.Text))
+	endIndex := min(t.StartIndex+termHeight-1-textHeightModifier, len(t.Text))
 	for i := t.StartIndex; i < endIndex; i++ {
 		bgColor := termbox.ColorDefault
 		yCoord := i - t.StartIndex + 1
@@ -114,6 +115,7 @@ func (t *textrenderer) Render(preview []string) {
 		}
 	}
 
+	t.RenderKeyFunctions()
 	t.RenderPreview(preview)
 	termbox.HideCursor()
 	termbox.Flush()
@@ -144,14 +146,43 @@ func (t *textrenderer) RenderBox(topLeftX, topLeftY, width, height int) {
 	termbox.Flush()
 }
 
+// RenderKeyFunctions renders the textrenderer's attribute KeyFunctions on the bottom line of the
+// terminal screen.
+func (t *textrenderer) RenderKeyFunctions() {
+	width, height := termbox.Size()
+	x := 1
+	y := height - 1
+	renderedFirst := 0
+
+	fgColor := termbox.ColorCyan
+	bgColor := termbox.ColorDefault
+	for _, token := range t.KeyFunctions {
+		if renderedFirst == 1 {
+			termbox.SetCell(x-2, y, rune(','), fgColor, bgColor)
+		}
+		if x+len(token)+renderedFirst < width {
+			for i := 0; i < len(token); i++ {
+				termbox.SetCell(x+i, y, rune(token[i]), fgColor, bgColor)
+			}
+			x += len(token)
+		} else {
+			break
+		}
+		renderedFirst = 1
+		x += 2
+	}
+	termbox.HideCursor()
+	termbox.Flush()
+}
+
 // RenderPreview renders a preview of the current selected file (not a directory) on the right hand
 // half of the terminal screen.
 func (t *textrenderer) RenderPreview(preview []string) {
 	t.RecalculateBounds()
 	previewX := t.StopRight + 2
-	width, height := termbox.Size()
+	width, _ := termbox.Size()
 	boxWidth := width - previewX - filePreviewWidthModifier
-	boxHeight := height - FilePreviewRenderY - filePreviewHeightModifier + 1
+	boxHeight := t.PreviewHeight() + 1
 	t.RenderBox(previewX-1, FilePreviewRenderY-1, boxWidth, boxHeight)
 
 	if preview == nil {
@@ -164,7 +195,7 @@ func (t *textrenderer) RenderPreview(preview []string) {
 		if preview[i] == "PERMISSION DENIED" {
 			bgColor = termbox.ColorRed
 		}
-		for j := 0; j < min(width-previewX-filePreviewWidthModifier, len(preview[i])); j++ {
+		for j := 0; j < min(boxWidth, len(preview[i])); j++ {
 			termbox.SetCell(previewX+j, y, rune(preview[i][j]), fgColor, bgColor)
 		}
 	}
@@ -176,7 +207,7 @@ func (t *textrenderer) RenderPreview(preview []string) {
 // PreviewSize returns the dimensions of the box in which the file preview is rendered.
 func (t *textrenderer) PreviewHeight() int {
 	_, height := termbox.Size()
-	return height - filePreviewHeightModifier - FilePreviewRenderY
+	return height - filePreviewHeightModifier - FilePreviewRenderY - 1
 }
 
 // TextViewSize returns the dimensions of the box in which textrenderer.Text is stored.

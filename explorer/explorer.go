@@ -43,7 +43,7 @@ type explorer struct {
 // The path may begin with either a '~' or a '/'.
 func (e *explorer) MoveAbsolute(path string) error {
 	// Remove trailing forward slashes from the path
-	if path[len(path)-1] == '/' {
+	if path[len(path)-1] == PathSepChar {
 		path = path[:len(path)-1]
 	}
 
@@ -64,11 +64,11 @@ func (e *explorer) MoveAbsolute(path string) error {
 // Each directory must be adjacent to the directory that the explorer is currently in.
 func (e *explorer) MoveMultiple(directories string) error {
 	// Remove trailing forward slashes from directories
-	if directories[len(directories)-1] == '/' {
+	if directories[len(directories)-1] == PathSepChar {
 		directories = directories[:len(directories)-1]
 	}
 
-	dirList := strings.Split(directories, "/")
+	dirList := strings.Split(directories, PathSep)
 	for _, dir := range dirList {
 		err := e.MoveOne(dir)
 		if err != nil {
@@ -82,14 +82,14 @@ func (e *explorer) MoveMultiple(directories string) error {
 // The given directory must be adjacent to the directory that the explorer is currently in.
 func (e *explorer) MoveOne(nextDirectory string) error {
 	// Remove trailing forward slashes from nextDirectory
-	if nextDirectory[len(nextDirectory)-1] == '/' {
+	if nextDirectory[len(nextDirectory)-1] == PathSepChar {
 		nextDirectory = nextDirectory[:len(nextDirectory)-1]
 	}
 
 	if nextDirectory == "." {
 		return nil
 	} else if nextDirectory == ".." {
-		lastForwardSlash := strings.LastIndexAny(e.Path, "/")
+		lastForwardSlash := strings.LastIndexAny(e.Path, PathSep)
 		if lastForwardSlash == -1 {
 			// We are at the top-level directory
 			return nil
@@ -98,12 +98,17 @@ func (e *explorer) MoveOne(nextDirectory string) error {
 		return nil
 	}
 
-	nextPath := e.Path + "/" + nextDirectory
+	nextPath := e.GetPath() + nextDirectory
 	if err := DirectoryExists(nextPath); err != nil {
 		return err
 	}
 	e.Path = nextPath
 	return nil
+}
+
+// Path returns the explorer attribute Path with an os-specific path separator appended to it.
+func (e *explorer) GetPath() string {
+	return e.Path + PathSep
 }
 
 // New returns an explorer type with all member values initialised to their defaults.

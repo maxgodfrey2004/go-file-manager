@@ -17,6 +17,7 @@ package explorer
 import (
 	"bufio"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -28,7 +29,7 @@ func (e *explorer) List(listAll bool) ([]string, error) {
 		contents = append(contents, "../")
 	}
 
-	f, err := os.Open(e.Path + "/")
+	f, err := os.Open(e.GetPath())
 	if err != nil {
 		return contents, err
 	}
@@ -70,7 +71,7 @@ func (e *explorer) ListDirectories(listAll bool) ([]string, error) {
 		directories = append(directories, "../")
 	}
 
-	f, err := os.Open(e.Path + "/")
+	f, err := os.Open(e.GetPath())
 	if err != nil {
 		return directories, err
 	}
@@ -104,7 +105,7 @@ func (e *explorer) ListN(curSelected string, n int, listAll bool) ([]string, err
 		return contents, nil
 	}
 
-	f, err := os.Open(e.Path + "/" + curSelected)
+	f, err := os.Open(e.GetPath() + curSelected)
 	if err != nil {
 		if strings.HasSuffix(err.Error(), "denied") {
 			contents = append(contents, "PERMISSION DENIED")
@@ -124,7 +125,7 @@ func (e *explorer) ListN(curSelected string, n int, listAll bool) ([]string, err
 		}
 		for _, file := range fileInfo {
 			if file.IsDir() {
-				contents = append(contents, file.Name()+"/")
+				contents = append(contents, file.Name()+PathSep)
 			} else {
 				contents = append(contents, file.Name())
 			}
@@ -142,7 +143,7 @@ func (e *explorer) ListN(curSelected string, n int, listAll bool) ([]string, err
 		}
 		if file.Name()[0] != '.' {
 			if file.IsDir() {
-				contents = append(contents, file.Name()+"/")
+				contents = append(contents, file.Name()+PathSep)
 			} else {
 				contents = append(contents, file.Name())
 			}
@@ -160,7 +161,7 @@ func (e *explorer) ListN(curSelected string, n int, listAll bool) ([]string, err
 // Given a bool, if true it will include files prefixed with a '.', otherwise it will not.
 func (e *explorer) ListFiles(listAll bool) ([]string, error) {
 	var files []string
-	f, err := os.Open(e.Path + "/")
+	f, err := os.Open(e.GetPath())
 	if err != nil {
 		return files, err
 	}
@@ -189,7 +190,7 @@ func (e *explorer) ListFiles(listAll bool) ([]string, error) {
 // ReadN reads the first N lines of a
 func (e *explorer) ReadN(fileName string, n int) ([]string, error) {
 	var contents []string
-	file, err := os.Open(e.Path + "/" + fileName)
+	file, err := os.Open(e.GetPath() + fileName)
 	if err != nil {
 		return contents, err
 	}
@@ -202,4 +203,18 @@ func (e *explorer) ReadN(fileName string, n int) ([]string, error) {
 
 	file.Close()
 	return contents, nil
+}
+
+// View will open an os-specific editor in which a file can be viewed (preferably for editing).
+func (e *explorer) View(fileName string) error {
+	cmd := exec.Command(TextEditor, e.GetPath()+fileName)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	if err := cmd.Wait(); err != nil {
+		return err
+	}
+	return nil
 }

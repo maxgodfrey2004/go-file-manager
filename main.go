@@ -28,9 +28,9 @@ const (
 	// to be rendered in a different place (in the same directory).
 	Reselect KeyEvent = iota + 1
 
-	// Move represents the user selecting a directory, and being taken to a new location in the
-	// file system.
-	Move
+	// Select represents the user pressing return or the right arrow, thus selecting the
+	// current file or directory to be either viewed or moved to respectively.
+	Select
 
 	// ToggleListAll represents the user toggling the state of whether or not they want to see
 	// directory contents whose names contain leading `.` characters.
@@ -81,7 +81,7 @@ func listenForEvents(ch chan keypress) {
 			case termbox.KeyArrowUp:
 				ch <- keypress{EventType: Reselect, Key: ev.Key}
 			case termbox.KeyArrowRight, termbox.KeyEnter:
-				ch <- keypress{EventType: Move, Key: ev.Key}
+				ch <- keypress{EventType: Select, Key: ev.Key}
 			default:
 				switch ev.Ch {
 				case rune('Q'), rune('q'):
@@ -98,10 +98,10 @@ func listenForEvents(ch chan keypress) {
 	}
 }
 
-// move moves nav, the explorer, to the current directory which the user has selected.
-func move() {
+// moveDirectory moves nav, the explorer, to the current directory which the user has selected.
+func moveDirectory() {
 	nextDir := screen.CurrentSelected()
-	if err := explorer.DirectoryExists(nav.Path + "/" + nextDir); err == nil {
+	if err := explorer.DirectoryExists(nav.GetPath() + nextDir); err == nil {
 		if err := nav.MoveOne(nextDir); err != nil {
 			panic(err)
 		}
@@ -109,8 +109,8 @@ func move() {
 		if err != nil {
 			panic(nav.Path)
 		}
-		screen.Init(nav.Path+"/", dirContents)
-		screen.Display(nav.Path+"/", dirContents, genPreview())
+		screen.Init(nav.GetPath(), dirContents)
+		screen.Display(nav.GetPath(), dirContents, genPreview())
 	}
 }
 
@@ -132,7 +132,7 @@ func genPreview() []string {
 	curSelected := screen.CurrentSelected()
 	var err error
 	var preview []string
-	if curSelected[len(curSelected)-1] != '/' {
+	if curSelected[len(curSelected)-1] != explorer.PathSepChar {
 		preview, err = nav.ReadN(curSelected, screen.PreviewHeight())
 		if err != nil {
 			panic(err)
@@ -140,7 +140,7 @@ func genPreview() []string {
 	} else {
 		preview, err = nav.ListN(curSelected, screen.PreviewHeight(), listAll)
 		if err != nil {
-			panic("'" + err.Error() + "'")
+			panic(err)
 		}
 	}
 
@@ -165,6 +165,27 @@ func reselect(ev keypress) {
 	screen.Render(genPreview())
 }
 
+// selectContents is called when the user selects either a file or a directory. It in turn will
+// either open an editor with the selected file, or move to the selected directory.
+func selectContents() {
+	curSelected := screen.CurrentSelected()
+	if curSelected[len(curSelected)-1] == explorer.PathSepChar {
+		moveDirectory()
+	} else {
+		if err := nav.View(curSelected); err != nil {
+			panic(err)
+		}
+		termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+
+		dirContents, err := nav.List(listAll)
+		if err != nil {
+			panic(err)
+		}
+		screen.Init(nav.GetPath(), dirContents)
+		screen.Display(nav.GetPath(), dirContents, genPreview())
+	}
+}
+
 // startExplorer runs the file manager until a Quit event is sent.
 func startExplorer() {
 	if err := termbox.Init(); err != nil {
@@ -179,8 +200,12 @@ func startExplorer() {
 	if err != nil {
 		panic(err)
 	}
-	screen.Init(nav.Path+"/", dirContents)
-	screen.Display(nav.Path+"/", dirContents, genPreview())
+	screen.KeyFunctions = []string{
+		"[Q|q: Quit]",
+		"[A|a: List]",
+	}
+	screen.Init(nav.GetPath(), dirContents)
+	screen.Display(nav.GetPath(), dirContents, genPreview())
 
 	go listenForEvents(keypressChan)
 
@@ -191,8 +216,8 @@ mainloop:
 			switch ev.EventType {
 			case Reselect:
 				reselect(ev)
-			case Move:
-				move()
+			case Select:
+				selectContents()
 			case ToggleListAll:
 				toggleListAll()
 			case Quit:
@@ -208,8 +233,8 @@ func toggleListAll() {
 	if err != nil {
 		panic(err)
 	}
-	screen.Init(nav.Path+"/", dirContents)
-	screen.Display(nav.Path+"/", dirContents, genPreview())
+	screen.Init(nav.GetPath(), dirContents)
+	screen.Display(nav.GetPath(), dirContents, genPreview())
 }
 
 func main() {
