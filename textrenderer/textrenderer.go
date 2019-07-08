@@ -115,8 +115,8 @@ func (t *textrenderer) Render(preview []string) {
 	}
 
 	t.RenderPreview(preview)
-	termbox.Flush()
 	termbox.HideCursor()
+	termbox.Flush()
 }
 
 // RenderBox renders a box on the terminal whose upper left corner, width and height are specified.
@@ -140,8 +140,8 @@ func (t *textrenderer) RenderBox(topLeftX, topLeftY, width, height int) {
 		termbox.SetCell(topLeftX, topLeftY+y, rune('│'), fgColor, bgColor)
 		termbox.SetCell(topLeftX+width, topLeftY+y, rune('│'), fgColor, bgColor)
 	}
-	termbox.Flush()
 	termbox.HideCursor()
+	termbox.Flush()
 }
 
 // RenderPreview renders a preview of the current selected file (not a directory) on the right hand
@@ -169,8 +169,8 @@ func (t *textrenderer) RenderPreview(preview []string) {
 		}
 	}
 
-	termbox.Flush()
 	termbox.HideCursor()
+	termbox.Flush()
 }
 
 // PreviewSize returns the dimensions of the box in which the file preview is rendered.
