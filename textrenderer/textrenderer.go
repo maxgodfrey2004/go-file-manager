@@ -31,6 +31,7 @@ const (
 	textWidthModifier  = 0
 
 	filePreviewHeightModifier = 1
+	filePreviewWidthModifier  = 1
 )
 
 // min returns the minimum of two integers. Strangely, math.Min takes two float64 variables as
@@ -58,13 +59,21 @@ func (t *textrenderer) CurrentSelected() string {
 
 // Display reassigns the lines which the textrenderer will be displaying, and their respective
 // header. It then renders them on the terminal screen.
-func (t *textrenderer) Display(header string, text []string) {
+func (t *textrenderer) Display(header string, text []string, preview []string) {
 	t.Header = header
 	t.Text = text
 	t.SelectedIndex = 0
 	t.StartIndex = 0
 
-	t.Render()
+	t.Render(preview)
+}
+
+/// Init initialises the textrenderer with a header, and a body of text to display.
+func (t *textrenderer) Init(header string, text []string) {
+	t.Header = header
+	t.Text = text
+	t.SelectedIndex = 0
+	t.StartIndex = 0
 }
 
 // RecalculateBounds recalculates the positions on the terminal at which textrenderer stops
@@ -75,8 +84,9 @@ func (t *textrenderer) RecalculateBounds() {
 }
 
 // Render displays the selected window of text and respective header on the terminal screen. The
-// selected file will be displayed with a caret, indicative of its selection.
-func (t *textrenderer) Render() {
+// selected file will be displayed with a caret, indicative of its selection. A preview of the
+// current selected item will also be displayed on the right hand side of the screen.
+func (t *textrenderer) Render(preview []string) {
 	t.RecalculateBounds()
 	_, termHeight := termbox.Size()
 	if err := termbox.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
@@ -104,22 +114,63 @@ func (t *textrenderer) Render() {
 		}
 	}
 
+	t.RenderPreview(preview)
 	termbox.Flush()
+	termbox.HideCursor()
 }
 
+// RenderBox renders a box on the terminal whose upper left corner, width and height are specified.
+func (t *textrenderer) RenderBox(topLeftX, topLeftY, width, height int) {
+	if width <= 0 || height <= 0 {
+		return
+	}
+
+	fgColor := termbox.ColorDefault
+	bgColor := termbox.ColorDefault
+	termbox.SetCell(topLeftX, topLeftY, rune('┌'), fgColor, bgColor)
+	termbox.SetCell(topLeftX+width, topLeftY, rune('┐'), fgColor, bgColor)
+	termbox.SetCell(topLeftX, topLeftY+height, rune('└'), fgColor, bgColor)
+	termbox.SetCell(topLeftX+width, topLeftY+height, rune('┘'), fgColor, bgColor)
+
+	for x := 1; x < width; x++ {
+		termbox.SetCell(topLeftX+x, topLeftY, rune('─'), fgColor, bgColor)
+		termbox.SetCell(topLeftX+x, topLeftY+height, rune('─'), fgColor, bgColor)
+	}
+	for y := 1; y < height; y++ {
+		termbox.SetCell(topLeftX, topLeftY+y, rune('│'), fgColor, bgColor)
+		termbox.SetCell(topLeftX+width, topLeftY+y, rune('│'), fgColor, bgColor)
+	}
+	termbox.Flush()
+	termbox.HideCursor()
+}
+
+// RenderPreview renders a preview of the current selected file (not a directory) on the right hand
+// half of the terminal screen.
 func (t *textrenderer) RenderPreview(preview []string) {
 	t.RecalculateBounds()
 	previewX := t.StopRight + 2
-	width, _ := termbox.Size()
+	width, height := termbox.Size()
+	boxWidth := width - previewX - filePreviewWidthModifier
+	boxHeight := height - FilePreviewRenderY - filePreviewHeightModifier + 1
+	t.RenderBox(previewX-1, FilePreviewRenderY-1, boxWidth, boxHeight)
 
+	if preview == nil {
+		return
+	}
 	for i := 0; i < len(preview); i++ {
 		y := i + FilePreviewRenderY
-		for j := 0; j < min(width-previewX, len(preview[i])); j++ {
-			termbox.SetCell(previewX+j, y, rune(preview[i][j]), termbox.ColorDefault, termbox.ColorDefault)
+		fgColor := termbox.ColorDefault
+		bgColor := termbox.ColorDefault
+		if preview[i] == "PERMISSION DENIED" {
+			bgColor = termbox.ColorRed
+		}
+		for j := 0; j < min(width-previewX-filePreviewWidthModifier, len(preview[i])); j++ {
+			termbox.SetCell(previewX+j, y, rune(preview[i][j]), fgColor, bgColor)
 		}
 	}
 
 	termbox.Flush()
+	termbox.HideCursor()
 }
 
 // PreviewSize returns the dimensions of the box in which the file preview is rendered.

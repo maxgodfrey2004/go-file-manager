@@ -38,6 +38,9 @@ const (
 
 	// Quit represents the termination of the application.
 	Quit
+
+	// NullEvent represents a dud event passed as a nil equivalent
+	NullEvent
 )
 
 // Movement directions
@@ -93,7 +96,7 @@ func listenForEvents(ch chan keypress) {
 		case termbox.EventError:
 			panic(ev.Err)
 		case termbox.EventResize:
-			screen.Render()
+			screen.Render(genPreview())
 		}
 	}
 }
@@ -109,7 +112,8 @@ func move() {
 		if err != nil {
 			panic(nav.Path)
 		}
-		screen.Display(nav.Path+"/", dirContents)
+		screen.Init(nav.Path+"/", dirContents)
+		screen.Display(nav.Path+"/", dirContents, genPreview())
 	}
 }
 
@@ -124,6 +128,26 @@ func keyToDirection(key termbox.Key) int {
 	default:
 		return 0
 	}
+}
+
+// genPreview returns a preview of the current selected file or directory.
+func genPreview() []string {
+	curSelected := screen.CurrentSelected()
+	var err error
+	var preview []string
+	if curSelected[len(curSelected)-1] != '/' {
+		preview, err = nav.ReadN(curSelected, screen.PreviewHeight())
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		preview, err = nav.ListN(curSelected, screen.PreviewHeight(), listAll)
+		if err != nil {
+			panic("'" + err.Error() + "'")
+		}
+	}
+
+	return preview
 }
 
 // reselect moves the screen's display of files when the user presses either an up or down arrow
@@ -141,16 +165,7 @@ func reselect(ev keypress) {
 	} else if newIndex < screen.StartIndex {
 		screen.StartIndex--
 	}
-	screen.Render()
-
-	curSelected := screen.CurrentSelected()
-	if curSelected[len(curSelected)-1] != '/' {
-		preview, err := nav.ReadN(curSelected, screen.PreviewHeight())
-		if err != nil {
-			panic(err)
-		}
-		screen.RenderPreview(preview)
-	}
+	screen.Render(genPreview())
 }
 
 // startExplorer runs the file manager until a Quit event is sent.
@@ -167,7 +182,8 @@ func startExplorer() {
 	if err != nil {
 		panic(err)
 	}
-	screen.Display(nav.Path+"/", dirContents)
+	screen.Init(nav.Path+"/", dirContents)
+	screen.Display(nav.Path+"/", dirContents, genPreview())
 
 	go listenForEvents(keypressChan)
 
@@ -195,7 +211,8 @@ func toggleListAll() {
 	if err != nil {
 		panic(err)
 	}
-	screen.Display(nav.Path+"/", dirContents)
+	screen.Init(nav.Path+"/", dirContents)
+	screen.Display(nav.Path+"/", dirContents, genPreview())
 }
 
 func main() {
