@@ -20,14 +20,18 @@ import (
 
 // X positions to render various elements of the explorer.
 const (
-	CaretRenderX = 1
-	FileRenderX  = 3
+	CaretRenderX       = 1
+	FilePreviewRenderY = 2
+	FileRenderX        = 3
 )
 
 // Modifiers affecting the size of the view through which textrenderer.Text is displayed.
 const (
 	textHeightModifier = 1
 	textWidthModifier  = 0
+
+	filePreviewHeightModifier = 1
+	filePreviewWidthModifier  = 1
 )
 
 // min returns the minimum of two integers. Strangely, math.Min takes two float64 variables as
@@ -40,10 +44,11 @@ func min(a, b int) int {
 }
 
 type textrenderer struct {
-	Header        string
-	SelectedIndex int
-	StartIndex    int
-	Text          []string
+	Header        string   // The string to render above Text.
+	SelectedIndex int      // The selected index in Text.
+	StartIndex    int      // Start rendering text from this index in Text.
+	StopRight     int      // Stop rendering text past this point.
+	Text          []string // The text which the renderer draws on the screen.
 }
 
 // CurrentSelected returns the element of the textrenderer's Text attribute which is currently
@@ -54,24 +59,41 @@ func (t *textrenderer) CurrentSelected() string {
 
 // Display reassigns the lines which the textrenderer will be displaying, and their respective
 // header. It then renders them on the terminal screen.
-func (t *textrenderer) Display(header string, text []string) {
+func (t *textrenderer) Display(header string, text []string, preview []string) {
 	t.Header = header
 	t.Text = text
 	t.SelectedIndex = 0
 	t.StartIndex = 0
 
-	t.Render()
+	t.Render(preview)
+}
+
+/// Init initialises the textrenderer with a header, and a body of text to display.
+func (t *textrenderer) Init(header string, text []string) {
+	t.Header = header
+	t.Text = text
+	t.SelectedIndex = 0
+	t.StartIndex = 0
+}
+
+// RecalculateBounds recalculates the positions on the terminal at which textrenderer stops
+// rendering text.
+func (t *textrenderer) RecalculateBounds() {
+	width, _ := termbox.Size()
+	t.StopRight = width / 2
 }
 
 // Render displays the selected window of text and respective header on the terminal screen. The
-// selected file will be displayed with a caret, indicative of its selection.
-func (t *textrenderer) Render() {
-	termWidth, termHeight := termbox.Size()
+// selected file will be displayed with a caret, indicative of its selection. A preview of the
+// current selected item will also be displayed on the right hand side of the screen.
+func (t *textrenderer) Render(preview []string) {
+	t.RecalculateBounds()
+	_, termHeight := termbox.Size()
 	if err := termbox.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
 		panic(err)
 	}
 
-	headerEnd := min(termWidth, len(t.Header))
+	headerEnd := min(t.StopRight, len(t.Header))
 	for i := 0; i < headerEnd; i++ {
 		termbox.SetCell(i, 0, rune(t.Header[i]), termbox.ColorDefault, termbox.ColorDefault)
 	}
@@ -91,10 +113,73 @@ func (t *textrenderer) Render() {
 			termbox.SetCell(FileRenderX+j, yCoord, rune(t.Text[i][j]), fgColor, bgColor)
 		}
 	}
+
+	t.RenderPreview(preview)
 	termbox.Flush()
+	termbox.HideCursor()
 }
 
-// TextViewSize returns the dimensions of the box in which textrenderer.Text is stored
+// RenderBox renders a box on the terminal whose upper left corner, width and height are specified.
+func (t *textrenderer) RenderBox(topLeftX, topLeftY, width, height int) {
+	if width <= 0 || height <= 0 {
+		return
+	}
+
+	fgColor := termbox.ColorDefault
+	bgColor := termbox.ColorDefault
+	termbox.SetCell(topLeftX, topLeftY, rune('┌'), fgColor, bgColor)
+	termbox.SetCell(topLeftX+width, topLeftY, rune('┐'), fgColor, bgColor)
+	termbox.SetCell(topLeftX, topLeftY+height, rune('└'), fgColor, bgColor)
+	termbox.SetCell(topLeftX+width, topLeftY+height, rune('┘'), fgColor, bgColor)
+
+	for x := 1; x < width; x++ {
+		termbox.SetCell(topLeftX+x, topLeftY, rune('─'), fgColor, bgColor)
+		termbox.SetCell(topLeftX+x, topLeftY+height, rune('─'), fgColor, bgColor)
+	}
+	for y := 1; y < height; y++ {
+		termbox.SetCell(topLeftX, topLeftY+y, rune('│'), fgColor, bgColor)
+		termbox.SetCell(topLeftX+width, topLeftY+y, rune('│'), fgColor, bgColor)
+	}
+	termbox.Flush()
+	termbox.HideCursor()
+}
+
+// RenderPreview renders a preview of the current selected file (not a directory) on the right hand
+// half of the terminal screen.
+func (t *textrenderer) RenderPreview(preview []string) {
+	t.RecalculateBounds()
+	previewX := t.StopRight + 2
+	width, height := termbox.Size()
+	boxWidth := width - previewX - filePreviewWidthModifier
+	boxHeight := height - FilePreviewRenderY - filePreviewHeightModifier + 1
+	t.RenderBox(previewX-1, FilePreviewRenderY-1, boxWidth, boxHeight)
+
+	if preview == nil {
+		return
+	}
+	for i := 0; i < len(preview); i++ {
+		y := i + FilePreviewRenderY
+		fgColor := termbox.ColorDefault
+		bgColor := termbox.ColorDefault
+		if preview[i] == "PERMISSION DENIED" {
+			bgColor = termbox.ColorRed
+		}
+		for j := 0; j < min(width-previewX-filePreviewWidthModifier, len(preview[i])); j++ {
+			termbox.SetCell(previewX+j, y, rune(preview[i][j]), fgColor, bgColor)
+		}
+	}
+
+	termbox.Flush()
+	termbox.HideCursor()
+}
+
+// PreviewSize returns the dimensions of the box in which the file preview is rendered.
+func (t *textrenderer) PreviewHeight() int {
+	_, height := termbox.Size()
+	return height - filePreviewHeightModifier - FilePreviewRenderY
+}
+
+// TextViewSize returns the dimensions of the box in which textrenderer.Text is stored.
 func (t *textrenderer) TextViewSize() (int, int) {
 	width, height := termbox.Size()
 	return width - textWidthModifier, height - textHeightModifier

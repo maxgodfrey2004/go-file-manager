@@ -15,7 +15,9 @@
 package explorer
 
 import (
+	"bufio"
 	"os"
+	"strings"
 )
 
 // List returns the contents of the directory which the explorer is currently in. Given a bool,
@@ -94,6 +96,65 @@ func (e *explorer) ListDirectories(listAll bool) ([]string, error) {
 	return directories, nil
 }
 
+// ListN returns the first N contents of the current directory. If the current directory contains
+// fewer than N things, then the contents of the current directory will be returned.
+func (e *explorer) ListN(curSelected string, n int, listAll bool) ([]string, error) {
+	var contents []string
+	if n <= 0 {
+		return contents, nil
+	}
+
+	f, err := os.Open(e.Path + "/" + curSelected)
+	if err != nil {
+		if strings.HasSuffix(err.Error(), "denied") {
+			contents = append(contents, "PERMISSION DENIED")
+			err = nil
+		}
+		return contents, err
+	}
+	defer f.Close()
+	if listAll {
+		fileInfo, err := f.Readdir(n)
+		if err != nil {
+			if err.Error() == "EOF" {
+				contents = append(contents, "DIRECTORY IS EMPTY")
+				err = nil
+			}
+			return contents, err
+		}
+		for _, file := range fileInfo {
+			if file.IsDir() {
+				contents = append(contents, file.Name()+"/")
+			} else {
+				contents = append(contents, file.Name())
+			}
+		}
+		return contents, nil
+	}
+
+	fileInfo, err := f.Readdir(0)
+	if err != nil {
+		return contents, err
+	}
+	for _, file := range fileInfo {
+		if len(contents) == n {
+			break
+		}
+		if file.Name()[0] != '.' {
+			if file.IsDir() {
+				contents = append(contents, file.Name()+"/")
+			} else {
+				contents = append(contents, file.Name())
+			}
+		}
+	}
+	if len(contents) == 0 {
+		contents = append(contents, "NO CONTENTS TO DISPLAY IN LIST MODE")
+	}
+
+	return contents, nil
+}
+
 // ListFiles returns all files within the current directory in which the explorer is located. Note
 // that this function will return an array of files exclusively. No directory will be included.
 // Given a bool, if true it will include files prefixed with a '.', otherwise it will not.
@@ -123,4 +184,22 @@ func (e *explorer) ListFiles(listAll bool) ([]string, error) {
 		}
 	}
 	return files, nil
+}
+
+// ReadN reads the first N lines of a
+func (e *explorer) ReadN(fileName string, n int) ([]string, error) {
+	var contents []string
+	file, err := os.Open(e.Path + "/" + fileName)
+	if err != nil {
+		return contents, err
+	}
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	for i := 0; i < n && scanner.Scan(); i++ {
+		contents = append(contents, scanner.Text())
+	}
+
+	file.Close()
+	return contents, nil
 }
