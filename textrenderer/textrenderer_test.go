@@ -29,7 +29,7 @@ func TestRender(t *testing.T) {
 	tr.SelectedIndex = 2
 	tr.StartIndex = 1
 
-	tr.Render()
+	tr.Render([]string{"no preview here..."})
 }
 
 func TestNew(t *testing.T) {
