@@ -105,7 +105,6 @@ func (e *explorer) ListN(curSelected string, n int, listAll bool) ([]string, err
 	}
 
 	f, err := os.Open(e.Path + "/" + curSelected)
-	defer f.Close()
 	if err != nil {
 		if strings.HasSuffix(err.Error(), "denied") {
 			contents = append(contents, "PERMISSION DENIED")
@@ -113,6 +112,7 @@ func (e *explorer) ListN(curSelected string, n int, listAll bool) ([]string, err
 		}
 		return contents, err
 	}
+	defer f.Close()
 	if listAll {
 		fileInfo, err := f.Readdir(n)
 		if err != nil {
@@ -132,7 +132,10 @@ func (e *explorer) ListN(curSelected string, n int, listAll bool) ([]string, err
 		return contents, nil
 	}
 
-	fileInfo, err := f.Readdir(n)
+	fileInfo, err := f.Readdir(0)
+	if err != nil {
+		return contents, err
+	}
 	for _, file := range fileInfo {
 		if len(contents) == n {
 			break

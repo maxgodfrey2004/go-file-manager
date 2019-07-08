@@ -38,9 +38,6 @@ const (
 
 	// Quit represents the termination of the application.
 	Quit
-
-	// NullEvent represents a dud event passed as a nil equivalent
-	NullEvent
 )
 
 // Movement directions
