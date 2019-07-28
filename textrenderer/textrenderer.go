@@ -15,6 +15,7 @@
 package textrenderer
 
 import (
+	"github.com/maxgodfrey2004/go-file-manager/explorer"
 	"github.com/nsf/termbox-go"
 )
 
@@ -107,7 +108,7 @@ func (t *textrenderer) Render(preview []string) {
 			termbox.SetCell(CaretRenderX, yCoord, rune('>'), termbox.ColorDefault, termbox.ColorDefault)
 		}
 		fgColor := termbox.ColorDefault
-		if t.Text[i][len(t.Text[i])-1] == '/' {
+		if t.Text[i][len(t.Text[i])-1] == explorer.PathSepChar {
 			fgColor = termbox.ColorBlue
 		}
 		for j := 0; j < len(t.Text[i]); j++ {
